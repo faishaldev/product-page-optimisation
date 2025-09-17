@@ -32,7 +32,7 @@ export default function Button({
   return (
     <button
       className={cn(
-        'font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 cursor-pointer whitespace-nowrap',
+        'font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 cursor-pointer',
         buttonVariants[variant],
         buttonSizes[size],
         fullWidth && 'w-full',

@@ -35,11 +35,11 @@ export default function ProductActions({
         </span>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <Button
           variant="primary"
           size="lg"
-          className="flex-1"
+          className="flex-1 text-center"
           disabled={availabilityStatus !== 'In Stock'}
         >
           Add to Cart - ${finalPrice.toFixed(2)}
@@ -47,6 +47,7 @@ export default function ProductActions({
         <Button
           variant="secondary"
           size="lg"
+          className="sm:flex-shrink-0"
           disabled={availabilityStatus !== 'In Stock'}
         >
           Buy Now
