@@ -1,27 +1,32 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import './globals.css';
+import Providers from '../components/Providers';
+import Header from '../components/Header';
 
 export const metadata: Metadata = {
-  title: "Product Store - Optimized E-commerce Experience",
-  description: "Discover amazing products at great prices with our optimized e-commerce platform featuring fast loading times and responsive design.",
-  keywords: "products, e-commerce, shopping, online store, deals, discounts",
-  authors: [{ name: "Product Store Team" }],
-  robots: "index, follow",
+  title: 'Product Store - Optimized E-commerce Experience',
+  description:
+    'Discover amazing products at great prices with our optimized e-commerce platform featuring fast loading times and responsive design.',
+  keywords: 'products, e-commerce, shopping, online store, deals, discounts',
+  authors: [{ name: 'Product Store Team' }],
+  robots: 'index, follow',
   openGraph: {
-    title: "Product Store - Optimized E-commerce Experience",
-    description: "Discover amazing products at great prices with our optimized e-commerce platform.",
-    type: "website",
-    locale: "en_US",
+    title: 'Product Store - Optimized E-commerce Experience',
+    description:
+      'Discover amazing products at great prices with our optimized e-commerce platform.',
+    type: 'website',
+    locale: 'en_US',
   },
   twitter: {
-    card: "summary_large_image",
-    title: "Product Store - Optimized E-commerce Experience",
-    description: "Discover amazing products at great prices with our optimized e-commerce platform.",
+    card: 'summary_large_image',
+    title: 'Product Store - Optimized E-commerce Experience',
+    description:
+      'Discover amazing products at great prices with our optimized e-commerce platform.',
   },
 };
 
 export const viewport = {
-  width: "device-width",
+  width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
@@ -40,22 +45,28 @@ export default function RootLayout({
         <link rel="preconnect" href="https://cdn.dummyjson.com" />
         <link rel="dns-prefetch" href="https://dummyjson.com" />
         <link rel="dns-prefetch" href="https://cdn.dummyjson.com" />
-        
+
         {/* Favicon */}
         <link rel="icon" href="/favicon.ico" />
-        
+
         {/* Theme color for mobile browsers */}
         <meta name="theme-color" content="#2563eb" />
         <meta name="msapplication-TileColor" content="#2563eb" />
-        
+
         {/* Prevent zoom on iOS */}
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+        />
       </head>
       <body className="h-full font-sans antialiased bg-gray-50 text-gray-900">
         <div className="min-h-full">
-          {children}
+          <Providers>
+            <Header />
+            {children}
+          </Providers>
         </div>
-        
+
         {/* Performance monitoring script placeholder */}
         <script
           dangerouslySetInnerHTML={{

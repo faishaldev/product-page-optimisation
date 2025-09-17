@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   // Image optimization
@@ -9,16 +9,16 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
   },
-  
+
   // Performance optimizations
   experimental: {
     optimizeCss: true,
     optimizePackageImports: ['react', 'react-dom'],
   },
-  
+
   // Compression
   compress: true,
-  
+
   // Headers for caching
   async headers() {
     return [

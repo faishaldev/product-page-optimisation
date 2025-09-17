@@ -1,106 +1,323 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Product, ProductFilters as ProductFiltersType } from '@/types/product';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Product, ProductFilters as FilterType } from '@/types/product';
 import { getProducts } from '@/lib/api';
 import LazyProductCard from '@/components/LazyProductCard';
 import ProductFilters from '@/components/ProductFilters';
+import { ProductGridSkeleton } from '@/components/skeletons';
 
-export default function Home() {
+function HomeContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<ProductFiltersType>({});
+
+  // Initialize filters from URL parameters
+  const [filters, setFilters] = useState<FilterType>({
+    category: searchParams.get('category') || undefined,
+    sortBy:
+      (searchParams.get('sortBy') as 'price-asc' | 'price-desc' | undefined) ||
+      undefined,
+    search: searchParams.get('search') || undefined,
+  });
+
+  // Initialize filters from URL parameters on component mount and URL changes
+  useEffect(() => {
+    const urlFilters: FilterType = {
+      category: searchParams.get('category') || undefined,
+      sortBy:
+        (searchParams.get('sortBy') as
+          | 'price-asc'
+          | 'price-desc'
+          | undefined) || undefined,
+      search: searchParams.get('search') || undefined,
+    };
+    setFilters(urlFilters);
+  }, [searchParams]);
 
   useEffect(() => {
-    async function loadProducts() {
+    const loadProducts = async () => {
       try {
         setLoading(true);
-        setError(null);
-        const response = await getProducts(filters);
-        setProducts(response.products);
+        const data = await getProducts();
+        setProducts(data.products); // Extract the products array from the response
+        setFilteredProducts(data.products);
       } catch (err) {
         setError('Failed to load products. Please try again later.');
         console.error('Error loading products:', err);
       } finally {
         setLoading(false);
       }
-    }
+    };
 
     loadProducts();
-  }, [filters]);
+  }, []);
+  useEffect(() => {
+    const applyFilters = () => {
+      let filtered = [...products];
 
-  const handleFiltersChange = (newFilters: ProductFiltersType) => {
+      // Apply category filter
+      if (filters.category) {
+        filtered = filtered.filter(
+          (product) => product.category === filters.category,
+        );
+      }
+
+      // Apply search filter
+      if (filters.search) {
+        const searchTerm = filters.search.toLowerCase();
+        filtered = filtered.filter(
+          (product) =>
+            product.title.toLowerCase().includes(searchTerm) ||
+            product.description.toLowerCase().includes(searchTerm),
+        );
+      }
+
+      // Apply sorting
+      if (filters.sortBy) {
+        if (filters.sortBy === 'price-asc') {
+          filtered.sort((a, b) => a.price - b.price);
+        } else if (filters.sortBy === 'price-desc') {
+          filtered.sort((a, b) => b.price - a.price);
+        }
+      }
+
+      setFilteredProducts(filtered);
+    };
+
+    // Apply filters whenever products or filters change
+    if (products.length > 0) {
+      applyFilters();
+    } else {
+      setFilteredProducts([]);
+    }
+  }, [products, filters]);
+
+  const handleFilterChange = (newFilters: FilterType) => {
     setFilters(newFilters);
+
+    // Update URL parameters
+    const params = new URLSearchParams();
+
+    if (newFilters.search) {
+      params.set('search', newFilters.search);
+    }
+
+    if (newFilters.category) {
+      params.set('category', newFilters.category);
+    }
+
+    if (newFilters.sortBy) {
+      params.set('sortBy', newFilters.sortBy);
+    }
+
+    // Update URL without page reload
+    const newUrl = params.toString() ? `/?${params.toString()}` : '/';
+    router.push(newUrl, { scroll: false });
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">Product Store</h1>
-          <p className="mt-2 text-gray-600">Discover amazing products at great prices</p>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filters */}
-        <ProductFilters filters={filters} onFiltersChange={handleFiltersChange} />
-
-        {/* Loading State */}
-        {loading && (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600">Loading products...</span>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="container mx-auto px-4 py-12">
+          {/* Hero Section Skeleton */}
+          <div className="text-center mb-16">
+            <div className="h-14 bg-gray-200 rounded-lg w-96 mx-auto mb-6 animate-pulse"></div>
+            <div className="h-6 bg-gray-200 rounded w-80 mx-auto mb-2 animate-pulse"></div>
+            <div className="h-6 bg-gray-200 rounded w-64 mx-auto animate-pulse"></div>
           </div>
-        )}
 
-        {/* Error State */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
+          {/* Stats Section Skeleton */}
+          <div className="mb-8 bg-white rounded-2xl shadow-md p-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+              <div>
+                <div className="h-10 bg-gray-200 rounded w-16 mx-auto mb-2 animate-pulse"></div>
+                <div className="h-5 bg-gray-200 rounded w-24 mx-auto animate-pulse"></div>
               </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Error</h3>
-                <p className="mt-1 text-sm text-red-700">{error}</p>
+              <div>
+                <div className="h-10 bg-gray-200 rounded w-16 mx-auto mb-2 animate-pulse"></div>
+                <div className="h-5 bg-gray-200 rounded w-28 mx-auto animate-pulse"></div>
+              </div>
+              <div>
+                <div className="h-10 bg-gray-200 rounded w-16 mx-auto mb-2 animate-pulse"></div>
+                <div className="h-5 bg-gray-200 rounded w-20 mx-auto animate-pulse"></div>
               </div>
             </div>
           </div>
-        )}
+
+          {/* Filters Skeleton */}
+          <div className="mb-8">
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="flex flex-wrap gap-4">
+                <div className="h-10 bg-gray-200 rounded-lg w-48 animate-pulse"></div>
+                <div className="h-10 bg-gray-200 rounded-lg w-32 animate-pulse"></div>
+                <div className="h-10 bg-gray-200 rounded-lg w-40 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Products Grid Skeleton */}
+          <div className="mb-8">
+            <ProductGridSkeleton count={12} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md mx-4">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            Oops! Something went wrong
+          </h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="container mx-auto px-4 py-12">
+        {/* Hero Section */}
+        <div className="text-center mb-16">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
+            Discover Amazing Products
+          </h1>
+          <p className="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
+            Explore our curated collection of high-quality products designed to
+            enhance your lifestyle
+          </p>
+        </div>
+
+        {/* Stats Section */}
+        <div className="mb-8 bg-white rounded-2xl shadow-md p-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div>
+              <div className="text-3xl font-bold text-blue-600 mb-2">
+                {products.length}
+              </div>
+              <div className="text-gray-700 font-medium">Total Products</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-green-600 mb-2">
+                {filteredProducts.length}
+              </div>
+              <div className="text-gray-700 font-medium">Showing Results</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-purple-600 mb-2">
+                {Array.isArray(products)
+                  ? new Set(products.map((p) => p.category)).size
+                  : 0}
+              </div>
+              <div className="text-gray-700 font-medium">Categories</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-8">
+          <ProductFilters
+            filters={filters}
+            onFiltersChange={handleFilterChange}
+          />
+        </div>
 
         {/* Products Grid */}
-        {!loading && !error && (
-          <>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {products.length} {products.length === 1 ? 'Product' : 'Products'} Found
-              </h2>
+        <div className="mb-8">
+          {!Array.isArray(filteredProducts) || filteredProducts.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="text-gray-500 text-6xl mb-4">🔍</div>
+              <h3 className="text-2xl font-semibold text-gray-800 mb-2">
+                No products found
+              </h3>
+              <p className="text-gray-600">
+                Try adjusting your filters to see more results
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filteredProducts.map((product, index) => (
+                <LazyProductCard
+                  key={product.id}
+                  product={product}
+                  index={index}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+          <div className="container mx-auto px-4 py-12">
+            {/* Hero Section Skeleton */}
+            <div className="text-center mb-16">
+              <div className="h-14 bg-gray-200 rounded-lg w-96 mx-auto mb-6 animate-pulse"></div>
+              <div className="h-6 bg-gray-200 rounded w-80 mx-auto mb-2 animate-pulse"></div>
+              <div className="h-6 bg-gray-200 rounded w-64 mx-auto animate-pulse"></div>
             </div>
 
-            {products.length === 0 ? (
-              <div className="text-center py-12">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8V4a1 1 0 00-1-1H7a1 1 0 00-1 1v1m8 0V4.5" />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No products found</h3>
-                <p className="mt-1 text-sm text-gray-500">Try adjusting your search or filter criteria.</p>
+            {/* Stats Section Skeleton */}
+            <div className="mb-8 bg-white rounded-2xl shadow-md p-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <div>
+                  <div className="h-10 bg-gray-200 rounded w-16 mx-auto mb-2 animate-pulse"></div>
+                  <div className="h-5 bg-gray-200 rounded w-24 mx-auto animate-pulse"></div>
+                </div>
+                <div>
+                  <div className="h-10 bg-gray-200 rounded w-16 mx-auto mb-2 animate-pulse"></div>
+                  <div className="h-5 bg-gray-200 rounded w-28 mx-auto animate-pulse"></div>
+                </div>
+                <div>
+                  <div className="h-10 bg-gray-200 rounded w-16 mx-auto mb-2 animate-pulse"></div>
+                  <div className="h-5 bg-gray-200 rounded w-20 mx-auto animate-pulse"></div>
+                </div>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {products.map((product, index) => (
-                  <LazyProductCard key={product.id} product={product} index={index} />
-                ))}
+            </div>
+
+            {/* Filters Skeleton */}
+            <div className="mb-8">
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex flex-wrap gap-4">
+                  <div className="h-10 bg-gray-200 rounded-lg w-48 animate-pulse"></div>
+                  <div className="h-10 bg-gray-200 rounded-lg w-32 animate-pulse"></div>
+                  <div className="h-10 bg-gray-200 rounded-lg w-40 animate-pulse"></div>
+                </div>
               </div>
-            )}
-          </>
-        )}
-      </main>
-    </div>
+            </div>
+
+            {/* Products Grid Skeleton */}
+            <div className="mb-8">
+              <ProductGridSkeleton count={12} />
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
   );
 }

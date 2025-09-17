@@ -9,11 +9,12 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const discountedPrice = product.price * (1 - product.discountPercentage / 100);
+  const discountedPrice =
+    product.price * (1 - product.discountPercentage / 100);
 
   return (
-    <Link href={`/product/${product.id}`} className="group">
-      <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+    <Link href={`/product/${product.id}`} className="group h-full">
+      <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-gray-200 h-full flex flex-col">
         <div className="relative aspect-square">
           <Image
             src={product.thumbnail}
@@ -24,22 +25,22 @@ export default function ProductCard({ product }: ProductCardProps) {
             priority={false}
           />
           {product.discountPercentage > 0 && (
-            <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-md text-sm font-semibold">
+            <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-lg">
               -{product.discountPercentage.toFixed(0)}%
             </div>
           )}
         </div>
-        
-        <div className="p-4">
-          <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+
+        <div className="p-5 flex-1 flex flex-col">
+          <h3 className="font-semibold text-lg mb-3 line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors leading-tight">
             {product.title}
           </h3>
-          
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+
+          <p className="text-gray-700 text-sm mb-4 line-clamp-2 leading-relaxed flex-1">
             {product.description}
           </p>
-          
-          <div className="flex items-center justify-between mb-2">
+
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               {product.discountPercentage > 0 ? (
                 <>
@@ -56,26 +57,28 @@ export default function ProductCard({ product }: ProductCardProps) {
                 </span>
               )}
             </div>
-            
-            <div className="flex items-center gap-1">
-              <span className="text-yellow-400">★</span>
-              <span className="text-sm text-gray-600">
+
+            <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-full">
+              <span className="text-yellow-500">★</span>
+              <span className="text-sm text-gray-700 font-medium">
                 {product.rating.toFixed(1)}
               </span>
             </div>
           </div>
-          
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500 capitalize">
+
+          <div className="flex items-center justify-between text-sm pt-3 border-t border-gray-100">
+            <span className="text-gray-600 capitalize font-medium">
               {product.category.replace('-', ' ')}
             </span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              product.stock > 10 
-                ? 'bg-green-100 text-green-800' 
-                : product.stock > 0 
-                ? 'bg-yellow-100 text-yellow-800'
-                : 'bg-red-100 text-red-800'
-            }`}>
+            <span
+              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                product.stock > 10
+                  ? 'bg-green-100 text-green-800'
+                  : product.stock > 0
+                  ? 'bg-yellow-100 text-yellow-800'
+                  : 'bg-red-100 text-red-800'
+              }`}
+            >
               {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
             </span>
           </div>
