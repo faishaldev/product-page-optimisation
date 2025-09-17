@@ -51,6 +51,12 @@ export interface ProductsResponse {
   limit: number;
 }
 
+export interface Category {
+  slug: string;
+  name: string;
+  url: string;
+}
+
 export interface ProductFilters {
   category?: string;
   sortBy?: 'price-asc' | 'price-desc';

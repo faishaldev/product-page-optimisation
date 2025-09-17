@@ -40,20 +40,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <head>
-        {/* Preconnect to external domains for better performance */}
         <link rel="preconnect" href="https://dummyjson.com" />
         <link rel="preconnect" href="https://cdn.dummyjson.com" />
         <link rel="dns-prefetch" href="https://dummyjson.com" />
         <link rel="dns-prefetch" href="https://cdn.dummyjson.com" />
-
-        {/* Favicon */}
         <link rel="icon" href="/favicon.ico" />
-
-        {/* Theme color for mobile browsers */}
         <meta name="theme-color" content="#2563eb" />
         <meta name="msapplication-TileColor" content="#2563eb" />
-
-        {/* Prevent zoom on iOS */}
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
@@ -66,24 +59,20 @@ export default function RootLayout({
             {children}
           </Providers>
         </div>
-
-        {/* Performance monitoring script placeholder */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              // Performance monitoring
               if (typeof window !== 'undefined') {
                 window.addEventListener('load', function() {
-                  // Log Core Web Vitals
                   if ('performance' in window) {
                     const navigation = performance.getEntriesByType('navigation')[0];
                     if (navigation) {
                       console.log('Performance Metrics:', {
                         TTFB: navigation.responseStart - navigation.requestStart,
                         FCP: performance.getEntriesByName('first-contentful-paint')[0]?.startTime || 0,
-                        LCP: 0, // Would be measured by web-vitals library
-                        CLS: 0, // Would be measured by web-vitals library
-                        FID: 0, // Would be measured by web-vitals library
+                        LCP: 0,
+                        CLS: 0,
+                        FID: 0,
                       });
                     }
                   }

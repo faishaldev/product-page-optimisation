@@ -1,10 +1,14 @@
-import { Product, ProductsResponse, ProductFilters } from '@/types/product';
+import {
+  Product,
+  ProductsResponse,
+  ProductFilters,
+  Category,
+} from '@/types/product';
 
 const BASE_URL = 'https://dummyjson.com';
 
-// Cache for API responses
 const cache = new Map<string, { data: unknown; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 5 * 60 * 1000;
 
 function getCacheKey(url: string): string {
   return url;
@@ -24,7 +28,7 @@ async function fetchWithCache<T>(url: string): Promise<T> {
 
   try {
     const response = await fetch(url, {
-      next: { revalidate: 300 }, // Next.js cache for 5 minutes
+      next: { revalidate: 300 },
     });
 
     if (!response.ok) {
@@ -33,7 +37,6 @@ async function fetchWithCache<T>(url: string): Promise<T> {
 
     const data = await response.json();
 
-    // Store in cache
     cache.set(cacheKey, {
       data,
       timestamp: Date.now(),
@@ -52,16 +55,13 @@ export async function getProducts(
   let url = `${BASE_URL}/products`;
   const params = new URLSearchParams();
 
-  // Add pagination
   params.append('limit', '30');
 
-  // Add search if provided
   if (filters?.search) {
     url = `${BASE_URL}/products/search`;
     params.append('q', filters.search);
   }
 
-  // Add category filter if provided
   if (filters?.category && filters.category !== 'all') {
     url = `${BASE_URL}/products/category/${encodeURIComponent(
       filters.category,
@@ -71,7 +71,6 @@ export async function getProducts(
   const fullUrl = `${url}?${params.toString()}`;
   const response = await fetchWithCache<ProductsResponse>(fullUrl);
 
-  // Sort by price if requested
   if (filters?.sortBy) {
     response.products.sort((a, b) => {
       if (filters.sortBy === 'price-asc') {
@@ -91,16 +90,12 @@ export async function getProduct(id: number): Promise<Product> {
   return fetchWithCache<Product>(url);
 }
 
-export async function getCategories(): Promise<string[]> {
+export async function getCategories(): Promise<Category[]> {
   const url = `${BASE_URL}/products/categories`;
-  const categories = await fetchWithCache<
-    Array<{ slug: string; name: string; url: string }>
-  >(url);
-  // Extract just the slug values to maintain compatibility
-  return categories.map((category) => category.slug);
+  const categories = await fetchWithCache<Category[]>(url);
+  return categories;
 }
 
-// Preload critical product data
 export async function preloadProducts(): Promise<void> {
   try {
     await getProducts();
